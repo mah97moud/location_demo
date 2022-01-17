@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 
@@ -17,6 +19,26 @@ class _MyLocationState extends State<MyLocation> {
   int _dutration = 1;
   double _width = 0.0;
   List locations = [];
+  Timer? _timer;
+  int _start = 60;
+
+  void startTimer() {
+    Duration oneMin = Duration(seconds: _dutration);
+    _timer = Timer.periodic(
+      oneMin,
+      (Timer timer) {
+        if (_start == 0) {
+          setState(() {
+            timer.cancel();
+          });
+        } else {
+          setState(() {
+            _start--;
+          });
+        }
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -49,6 +71,12 @@ class _MyLocationState extends State<MyLocation> {
   }
 
   @override
+  void dispose() {
+    _timer!.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
@@ -59,17 +87,18 @@ class _MyLocationState extends State<MyLocation> {
           ),
           GestureDetector(
             onTap: () {
-              for (int i = 0; i <= 60; i = i + 5) {
-                getLocation();
-
-                print(locations);
-                print(_currentPosition);
-                print(i);
-              }
-              setState(() {
-                _width = 200.0;
-                print(_dutration);
-              });
+              startTimer();
+              // for (int i = 0; i <= 60; i = i + 5) {
+              //   getLocation();
+              //
+              //   print(locations);
+              //   print(_currentPosition);
+              //   print(i);
+              // }
+              // setState(() {
+              //   _width = 200.0;
+              //   print(_dutration);
+              // });
             },
             child: const CircleAvatar(
               radius: 35.0,
@@ -110,6 +139,9 @@ class _MyLocationState extends State<MyLocation> {
           ),
           SizedBox(
             height: 20.0,
+          ),
+          Text(
+            '$_start',
           ),
         ],
       ),
