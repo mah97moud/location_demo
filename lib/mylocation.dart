@@ -1,7 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:location/location.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:location_demo/location_cubit.dart';
+import 'package:location_demo/location_state.dart';
+import 'package:location_demo/locations_screen.dart';
 
 class MyLocation extends StatefulWidget {
   const MyLocation({Key? key}) : super(key: key);
@@ -11,139 +12,112 @@ class MyLocation extends StatefulWidget {
 }
 
 class _MyLocationState extends State<MyLocation> {
-  LocationData? _currentPosition;
-  String? _address, _dateTime;
-  Location location = Location();
   // LatLng _initialcameraposition = LatLng(0.5937, 0.9629);
 
-  int _dutration = 1;
   double _width = 0.0;
   List locations = [];
-  Timer? _timer;
-  int _start = 60;
-
-  void startTimer() {
-    Duration oneMin = Duration(seconds: _dutration);
-    _timer = Timer.periodic(
-      oneMin,
-      (Timer timer) {
-        if (_start == 0) {
-          setState(() {
-            timer.cancel();
-          });
-        } else {
-          setState(() {
-            _start--;
-          });
-        }
-      },
-    );
-  }
 
   @override
   void initState() {
     super.initState();
-    getLocation();
-  }
-
-  getLocation() async {
-    bool _serviceEnabled;
-    PermissionStatus _permissionGranted;
-
-    _serviceEnabled = await location.serviceEnabled();
-
-    if (!_serviceEnabled) {
-      _serviceEnabled = await location.requestService();
-      if (!_serviceEnabled) {
-        return;
-      }
-    }
-
-    _permissionGranted = await location.hasPermission();
-    if (_permissionGranted == PermissionStatus.denied) {
-      location.requestPermission();
-      if (_permissionGranted != PermissionStatus.granted) {
-        return;
-      }
-    }
-
-    _currentPosition = await location.getLocation();
+    // getLocation();
   }
 
   @override
   void dispose() {
-    _timer!.cancel();
+    // _timer!.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    var cubit = LocationCubit.get(context);
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(
-            width: double.infinity,
-          ),
-          GestureDetector(
-            onTap: () {
-              startTimer();
-              // for (int i = 0; i <= 60; i = i + 5) {
-              //   getLocation();
-              //
-              //   print(locations);
-              //   print(_currentPosition);
-              //   print(i);
-              // }
-              // setState(() {
-              //   _width = 200.0;
-              //   print(_dutration);
-              // });
-            },
-            child: const CircleAvatar(
-              radius: 35.0,
-              child: Text(
-                'Find',
-                style: TextStyle(
-                  fontSize: 16.0,
+      body: BlocConsumer<LocationCubit, LocationState>(
+        builder: (context, state) {
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(
+                width: double.infinity,
+              ),
+              GestureDetector(
+                onTap: () {
+                  cubit.getLocation();
+                  cubit.startTimer();
+                  cubit.isStop = false;
+
+                  setState(() {
+                    _width = 200.0;
+                    print(cubit.dutration);
+                  });
+                },
+                child: const CircleAvatar(
+                  radius: 35.0,
+                  child: Text(
+                    'Find',
+                    style: TextStyle(
+                      fontSize: 16.0,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(
-            height: 20.0,
-          ),
-          AnimatedContainer(
-            duration: Duration(minutes: _dutration),
-            width: _width,
-            height: 20.0,
-            decoration: BoxDecoration(
-              color: Colors.blue,
-              borderRadius: BorderRadius.circular(20.0),
-            ),
-          ),
-          const SizedBox(
-            height: 20.0,
-          ),
-          Column(
-            children: [
-              if (_currentPosition != null)
-                Text(
-                  'lang' + _currentPosition!.latitude.toString(),
+              const SizedBox(
+                height: 20.0,
+              ),
+              AnimatedContainer(
+                duration: Duration(minutes: cubit.dutration),
+                width: _width,
+                height: 20.0,
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.circular(20.0),
                 ),
-              if (_currentPosition != null)
-                Text(
-                  'long' + _currentPosition!.longitude.toString(),
-                ),
+              ),
+              const SizedBox(
+                height: 20.0,
+              ),
+              Column(
+                children: [
+                  if (cubit.currentPosition != null)
+                    Text(
+                      'lang' + cubit.currentPosition!.latitude.toString(),
+                    ),
+                  if (cubit.currentPosition != null)
+                    Text(
+                      'long' + cubit.currentPosition!.longitude.toString(),
+                    ),
+                ],
+              ),
+              const SizedBox(
+                height: 20.0,
+              ),
+              Text(
+                '${cubit.start}',
+              ),
             ],
+          );
+        },
+        listener: (_, state) {
+          if (cubit.isStop == false) {
+            cubit.moreLocation(state, context);
+          }
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          cubit.navTo(context);
+        },
+        child: const CircleAvatar(
+          backgroundColor: Colors.red,
+          radius: 35.0,
+          child: Text(
+            'stop',
+            style: TextStyle(
+              fontSize: 16.0,
+            ),
           ),
-          SizedBox(
-            height: 20.0,
-          ),
-          Text(
-            '$_start',
-          ),
-        ],
+        ),
       ),
     );
   }
