@@ -19,7 +19,7 @@ class LocationsScreen extends StatelessWidget {
       body: BlocConsumer<LocationCubit, LocationState>(
         builder: (context, state) {
           return ListView.separated(
-            itemBuilder: (context, index) => locationItem(cubit, list),
+            itemBuilder: (context, index) => locationItem(cubit, index),
             separatorBuilder: (context, index) => Container(
               height: 10.0,
             ),
@@ -31,7 +31,7 @@ class LocationsScreen extends StatelessWidget {
     );
   }
 
-  Widget locationItem(LocationCubit cubit, list) {
+  Widget locationItem(LocationCubit cubit, int index) {
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Row(
@@ -40,9 +40,13 @@ class LocationsScreen extends StatelessWidget {
           Text(
             'Cairo',
           ),
+          Text(
+            cubit.locationsList[index].latitude.toString(),
+          ),
           ElevatedButton(
             onPressed: () {
-              cubit.openLocation(list.latitude, list.longitude);
+              cubit.openLocation(cubit.locationsList[index].latitude,
+                  cubit.locationsList[index].longitude);
             },
             child: const Text('Open Location'),
           ),
