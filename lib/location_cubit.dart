@@ -73,7 +73,7 @@ class LocationCubit extends Cubit<LocationState> {
       print(currentPosition);
 
       locationsList.add(currentPosition);
-      print(locationsList[0].longitude);
+      // print(locationsList[0].longitude);
 
       Address add = await locationName(
           locationsList[0].latitude, locationsList[0].longitude);
@@ -98,6 +98,7 @@ class LocationCubit extends Cubit<LocationState> {
       ),
     );
     isStop = true;
+
     emit(StopState());
   }
 
